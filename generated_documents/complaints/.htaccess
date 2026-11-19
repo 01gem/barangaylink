@@ -1,0 +1,10 @@
+# Direct HTTP access to generated summons is denied.
+# Signed-in officials read them through api/hearings/summons_view.php.
+# Apache 2.4. This file is not applied by PHP's built-in server.
+Options -Indexes
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Deny from all
+</IfModule>

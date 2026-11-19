@@ -1,0 +1,144 @@
+<?php
+/**
+ * BarangayLink - Web-based barangay management system for Brgy. Sampaguita.
+ * Copyright (C) 2026 Jun Gem Riege M. Dulduco
+ * Licensed under the GNU General Public License v3.0 (or later).
+ * See the LICENSE file in the project root for the full text.
+ */
+
+require_once __DIR__ . '/../common.php';
+session_start();
+// Allow both staff and admin officials (401 if no official session at all), matching create.php.
+require_official_session();
+
+require_post();
+$db = get_db();
+$input = read_json_input();
+
+$id = (int)($input['resident_id'] ?? 0);
+$fname = trim((string)($input['fname'] ?? ''));
+$lname = trim((string)($input['lname'] ?? ''));
+$address = trim((string)($input['address'] ?? ''));
+$contact = trim((string)($input['contact'] ?? ''));
+$username = trim((string)($input['username'] ?? ''));
+$password = (string)($input['password'] ?? '');
+
+if ($id <= 0 || $fname === '' || $lname === '' || $address === '' || $contact === '' || $username === '') {
+  json_error('Resident id and required fields are missing.');
+}
+if (!preg_match('/^[a-zA-Z0-9._]{3,50}$/', $username)) {
+  json_error('Username must be 3-50 characters and contain only letters, numbers, dots, and underscores.');
+}
+
+$check = $db->prepare("SELECT id FROM residents WHERE username = ? AND id <> ? LIMIT 1");
+if (!$check) json_error('Failed to validate resident username.', 500);
+$check->bind_param('si', $username, $id);
+$rows = db_query_all($check);
+$check->close();
+if (count($rows) > 0) {
+  json_error('Resident username already exists.');
+}
+
+// Stored as E.164; unique among residents other than this one (race caught at the UPDATE).
+$contact = require_unique_account_contact($db, 'residents', $contact, $id);
+
+// Snapshot the fields the workforce classifier reads, so a change can invalidate skill_category.
+$prev = $db->prepare("SELECT occupation, educational_attainment, employment_status FROM residents WHERE id = ? LIMIT 1");
+if (!$prev) json_error('Failed to load resident.', 500);
+$prev->bind_param('i', $id);
+$prevRows = db_query_all($prev);
+$prev->close();
+$previousProfile = $prevRows[0] ?? null;
+
+// ── Profiling fields (all optional) ──
+$birthdate = trim((string)($input['birthdate'] ?? '')) ?: null;
+$civil_status = trim((string)($input['civil_status'] ?? '')) ?: null;
+$purok_zone = trim((string)($input['purok_zone'] ?? '')) ?: null;
+$purok_zone = normalize_purok($purok_zone);
+if ($purok_zone === false) {
+  json_error('Purok must be Purok 1 through Purok 5.', 422);
+}
+$household_size = isset($input['household_size']) && $input['household_size'] !== '' ? (int)$input['household_size'] : 1;
+$is_solo_parent = !empty($input['is_solo_parent']) ? 1 : 0;
+$is_pwd = !empty($input['is_pwd']) ? 1 : 0;
+$is_4ps_member = !empty($input['is_4ps_member']) ? 1 : 0;
+$educational_attainment = trim((string)($input['educational_attainment'] ?? '')) ?: null;
+$employment_status = trim((string)($input['employment_status'] ?? '')) ?: null;
+$occupation = trim((string)($input['occupation'] ?? '')) ?: null;
+$training_certifications = trim((string)($input['training_certifications'] ?? '')) ?: null;
+$work_availability = trim((string)($input['work_availability'] ?? '')) ?: null;
+
+// NOTE: household_id, relationship_to_household_head and profile_status are NOT updated here.
+// They are managed exclusively by the household endpoints. This prevents an admin editing
+// a resident from silently unlinking them from a household.
+
+$profiling_set = ", birthdate = ?, civil_status = ?, purok_zone = ?, household_size = ?, is_solo_parent = ?, is_pwd = ?, is_4ps_member = ?, educational_attainment = ?, employment_status = ?, occupation = ?, work_availability = ?, training_certifications = ?";
+
+if ($password !== '') {
+  $hash = password_hash($password, PASSWORD_DEFAULT);
+  $stmt = $db->prepare("UPDATE residents SET fname = ?, lname = ?, address = ?, contact = ?, username = ?, password = ?" . $profiling_set . " WHERE id = ?");
+  if (!$stmt) json_error('Failed to prepare resident update.', 500);
+  $stmt->bind_param('sssssssssiiiisssssi',
+    $fname, $lname, $address, $contact, $username, $hash,
+    $birthdate, $civil_status, $purok_zone, $household_size,
+    $is_solo_parent, $is_pwd, $is_4ps_member,
+    $educational_attainment, $employment_status, $occupation,
+    $work_availability, $training_certifications,
+    $id
+  );
+} else {
+  $stmt = $db->prepare("UPDATE residents SET fname = ?, lname = ?, address = ?, contact = ?, username = ?" . $profiling_set . " WHERE id = ?");
+  if (!$stmt) json_error('Failed to prepare resident update.', 500);
+  $stmt->bind_param('ssssssssiiiisssssi',
+    $fname, $lname, $address, $contact, $username,
+    $birthdate, $civil_status, $purok_zone, $household_size,
+    $is_solo_parent, $is_pwd, $is_4ps_member,
+    $educational_attainment, $employment_status, $occupation,
+    $work_availability, $training_certifications,
+    $id
+  );
+}
+
+if (!$stmt->execute()) {
+  if (is_contact_key_violation($stmt)) json_error(CONTACT_DUPLICATE_MESSAGE, 422);
+  json_db_error('Failed to update resident', $stmt->error);
+}
+$stmt->close();
+
+// Reset the cached skill category when any classifier input changed.
+if ($previousProfile !== null) {
+  $classifierInputs = [
+    'occupation' => $occupation,
+    'educational_attainment' => $educational_attainment,
+    'employment_status' => $employment_status,
+  ];
+  $classifierInputChanged = false;
+  foreach ($classifierInputs as $field => $value) {
+    if (trim((string)($previousProfile[$field] ?? '')) !== trim((string)($value ?? ''))) {
+      $classifierInputChanged = true;
+      break;
+    }
+  }
+  if ($classifierInputChanged) {
+    $reset = $db->prepare("UPDATE residents SET skill_category = NULL WHERE id = ?");
+    if ($reset) {
+      $reset->bind_param('i', $id);
+      if (!$reset->execute()) {
+        error_log('Failed to reset skill_category for resident ' . $id . ': ' . $reset->error);
+      }
+      $reset->close();
+    }
+  }
+}
+
+log_audit(
+  $db,
+  isset($_SESSION['official_id']) ? (int)$_SESSION['official_id'] : null,
+  (string)($_SESSION['official_name'] ?? ''),
+  'Updated resident',
+  'resident',
+  "{$fname} {$lname} (ID: {$id})"
+);
+
+json_success(['message' => 'Resident updated successfully.']);
+?>

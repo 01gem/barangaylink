@@ -1,0 +1,253 @@
+BarangayLink Phase 3 - raw verification outputs
+Generated: 2026-11-13 22:00:03 +0800
+HEAD: 642ce6a feat(documents): AI placeholder analysis, suggest-only backend (Phase 3)
+git status --short: [?? project-support/docs/document-management-phase3-results.txt;]
+
+=== php project-support/tests/document-analysis/run.php ===
+PASS provider key is blank in this process
+PASS ai_chat is inert without a key (no request can leave)
+PASS extract keeps original indexes and skips the empty paragraph
+PASS extract returns sample-filled text
+PASS seeded template bytes unchanged by sample copy
+PASS happy path accepts all nine suggestions
+PASS happy path sorted by paragraph then position
+PASS every start offset points at its text
+PASS known start offsets are exact
+PASS accepted rows expose only the public keys
+PASS fenced JSON reply is accepted
+PASS second occurrence resolves to its own offset
+PASS wrong occurrence is dropped
+PASS match is case-sensitive
+PASS unknown key is dropped
+PASS unknown or skipped paragraph index is dropped
+PASS start offset counts characters, not bytes
+PASS spans touching {{ or }} are dropped
+PASS span separated from a placeholder by one character is not touching
+PASS overlap keeps the higher confidence
+PASS overlap tie keeps the earlier item
+PASS accepted suggestions are capped at 40
+PASS cap keeps the 40 highest confidence, sorted by position
+PASS raw model list is bounded
+PASS text longer than 200 or empty is dropped
+PASS text of exactly 200 characters is accepted
+PASS reason has no control characters
+PASS reason has no HTML angle brackets
+PASS reason is capped at 200 characters
+PASS non-string reason becomes empty
+PASS confidence is clamped to 0-1
+PASS malformed items are dropped, valid one kept
+PASS non-JSON and non-array output is a failure
+PASS empty suggestion list is a success, not a failure
+PASS system prompt is the constant
+PASS document text never reaches the system prompt
+PASS document text and fields travel as JSON data in the user message
+PASS system prompt tells the model the document is data
+PASS injected non-registry key is dropped
+PASS 200 non-empty paragraphs are allowed
+PASS 201 non-empty paragraphs are rejected
+PASS 20,000 characters are allowed
+PASS 20,001 characters are rejected
+PASS too-large document is rejected by extract
+PASS document with no text is rejected
+PASS only word/document.xml is extracted
+PASS extract leaves the file bytes unchanged
+PASS scratch database differs from real database
+PASS scratch database prefix asserted before writes
+PASS migration builds the same table as database.sql
+PASS migration is idempotent
+PASS table has the (version_id, id) index and both foreign keys
+PASS run returns the public response shape
+PASS run stores one completed row
+PASS stored row carries hash, model, counts and author
+PASS stored suggestions equal the returned suggestions
+PASS model called once with JSON mode, 30 s timeout and the constant system prompt
+PASS audit row has counts for the right official and version
+PASS audit row holds no document text, file name or hash
+PASS template file bytes unchanged after run
+PASS lock name is scoped to the database and version
+PASS lock is released after run
+PASS latest analysis is not stale while the file is unchanged
+PASS analysis is stale when its hash no longer matches the file
+PASS analysis is stale when the file is missing
+PASS no analysis yet for another version
+PASS retention keeps only the latest row for the version
+PASS retention leaves other versions alone
+PASS failed model call stores a failed row and keeps the completed row
+PASS unparseable model output stores a failed row and keeps the completed row
+PASS non-array model output stores a failed row and keeps the completed row
+PASS throwing model call stores a failed row and keeps the completed row
+PASS failed run audit has counts only
+PASS lock is released after failures
+PASS concurrent lock returns 409
+PASS busy run calls no model and writes nothing
+PASS lock is per version
+PASS busy run does not steal the holder lock
+PASS run succeeds again once the lock is free
+PASS a completed run replaces the older completed and failed rows
+PASS completed then failed: completed row and its suggestions survive
+PASS completed then failed: latest returns the completed analysis
+PASS completed then failed: last_attempt_failed is true
+PASS latest exposes no file name or model
+PASS completed, failed, failed: one completed plus only the newest failed row
+PASS completed, failed, completed: one row, the newest completed
+PASS failed then failed: one failed row
+PASS failed only: latest returns the failed row with last_attempt_failed false
+PASS failed then completed: one completed row
+PASS failed then completed: last_attempt_failed is false
+PASS retention sequences leave other versions untouched
+PASS too-large document is rejected before any model call
+PASS throttle default message is unchanged
+PASS throttle empty message falls back to the default
+PASS throttle custom message replaces the 429 text
+PASS throttled calls log no usage
+PASS throttle still passes and logs under the limit
+PASS fake $chat was the only model path (17 calls, key still blank)
+PASS template files unchanged after all runs
+PASS template directory unchanged
+PASS real row count unchanged audit_log
+PASS real row count unchanged document_template_versions
+PASS real row count unchanged ai_request_log
+PASS no scratch database left behind
+Results: 104/104 passed.
+exit=0
+
+=== php project-support/tests/document-templates/endpoints.php ===
+PASS scratch database differs from real database
+PASS scratch database prefix asserted before writes
+PASS server upload limit maps error 1
+PASS server upload limit maps error 2
+PASS admin login uses scratch database
+PASS staff login uses scratch database
+PASS types list returns safe fields and decoded check errors
+PASS admin official page contains document templates tab
+PASS staff official page contains document templates tab
+PASS literal placeholder-shaped values render unchanged
+PASS upload rejects over 2 MB
+PASS upload rejects wrong extension
+PASS upload rejects unsafe entry
+PASS upload rejects external relationship
+PASS upload rejects zip-bomb ratio
+PASS valid upload and check results
+PASS analyze returns 401 without session
+PASS analyze returns 503 when AI is not configured (child server key is empty)
+PASS analyze is open to staff (503, not 403)
+PASS analyze returns 422 without strict acknowledgement
+PASS analyze returns 409 for a non-draft version
+PASS analyze returns 404 for an unknown version
+PASS analyze is POST only
+PASS analysis_get returns 401 without session
+PASS analysis_get returns 404 when none exists
+PASS analysis_get returns 404 for an unknown version
+PASS refused analyze calls store nothing and consume no AI budget
+PASS missing required key blocks activation
+PASS missing optional key remains valid
+PASS activation refused before test render
+PASS one real LibreOffice test render
+PASS download exact stored bytes and audit
+PASS preview valid token only
+PASS altered checksum refused
+PASS activation after render succeeds
+PASS resolved old context and seeded file remain stable
+PASS one active version enforced
+PASS seeded version 1 activates after exactly one test render
+PASS staff upload allowed
+PASS staff test allowed
+PASS staff activate allowed
+PASS concurrent activations have one winner and one conflict
+PASS draft discard succeeds
+PASS non-draft discard returns conflict
+PASS no session types_list.php
+PASS no session template_test_render.php
+PASS no session template_download.php
+PASS no session template_activate.php
+PASS no session template_discard.php
+PASS no session type_archive.php
+PASS no session template_analyze.php
+PASS no session template_analysis_get.php
+PASS anonymous create remains 401
+PASS archive role and repeat guard
+PASS archived type context remains available
+PASS archived type existing pending request still generates
+PASS archived create rejected
+PASS versions table is really gone before the fallback check
+PASS generation fallback without versions table
+PASS template directory unchanged
+PASS real row count unchanged barangay_officials
+PASS real row count unchanged document_template_versions
+PASS real row count unchanged audit_log
+Results: 63/63 passed.
+exit=0
+
+=== php project-support/tests/document-registry/run.php ===
+PASS registry strip removed exactly one section
+PASS upgrade database initially has no registry tables
+PASS first migration creates all registry tables
+PASS both installs contain 40 registry fields
+PASS upgrade tuples equal fresh-install tuples
+PASS second migration changes nothing
+PASS admin signatory update returns 200 and audit row
+PASS staff signatory update returns 403
+PASS no-session signatory update returns 401
+PASS staff signatory GET returns 200
+PASS signatory title returns 422
+PASS real app audit log count is unchanged
+PASS registry preserves exact case-sensitive type matching
+PASS parity Barangay Clearance
+PASS parity Certificate of Residency
+PASS parity Certificate of Indigency
+PASS parity Certificate of Good Moral Character
+PASS parity Business Permit Endorsement
+PASS ISO date is formatted
+PASS invalid date is preserved
+PASS address suffix is removed once
+PASS address suffix without comma is removed
+PASS plain address is preserved
+PASS printed signatory has honorific and title
+PASS template checker detects intact-plus-split duplicate
+PASS fail-closed fixture path is absent before test
+PASS render fails closed with exact message
+Results: 27/27 passed.
+exit=0
+
+=== php project-support/tests/document-baseline/run.php ===
+PASS Barangay Clearance
+PASS Certificate of Residency
+PASS Certificate of Indigency
+PASS Certificate of Good Moral Character
+PASS Business Permit Endorsement
+PASS Barangay Clearance ISO/address normalization
+Baseline comparison passed.
+exit=0
+
+=== migration 20261113 on barangay_system_test_environment (read-only checks) ===
+table exists (1 = yes): 1
+row count: 0
+leftover capstone_* databases: []
+
+=== php project-support/scripts/analysis-accuracy.php --confirm-external ===
+Scratch database: capstone_accuracy_14032_4491
+
+== Barangay Clearance
+   expected 9, accepted 9, exact hits 9, dropped by validator 0
+   recall 1.00, precision 1.00
+
+== Certificate of Residency
+   expected 8, accepted 8, exact hits 8, dropped by validator 0
+   recall 1.00, precision 1.00
+
+== Certificate of Indigency
+   expected 7, accepted 7, exact hits 7, dropped by validator 0
+   recall 1.00, precision 1.00
+
+== Certificate of Good Moral Character
+   expected 7, accepted 7, exact hits 7, dropped by validator 0
+   recall 1.00, precision 1.00
+
+== Business Permit Endorsement
+   expected 9, accepted 9, exact hits 9, dropped by validator 0
+   recall 1.00, precision 1.00
+
+TOTAL recall 1.00 (40/40), precision 1.00 (40/40)
+A hit needs the exact span, offset and key. Nothing was applied to any template.
+Cleanup done: temp copies deleted, scratch database dropped.
+exit=0

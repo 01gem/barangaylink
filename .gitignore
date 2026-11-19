@@ -1,0 +1,116 @@
+# ============ Secrets & environment — NEVER commit ============
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+*.jks
+*.keystore
+*.ppk
+id_rsa*
+id_ed25519*
+credentials*.json
+service-account*.json
+client_secret*.json
+auth.json
+.npmrc
+.htpasswd
+.pgpass
+.my.cnf
+secrets.*
+*.secret
+config.local.php
+*.local.php
+
+# ============ IDE / AI tools ============
+.vscode/
+.idea/
+.cursor/
+.codex
+.claude/
+/Claude outputs/
+*.swp
+*.swo
+*~
+
+# ============ OS ============
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ============ Dependencies ============
+node_modules/
+npm-debug.log*
+/vendor/
+composer.lock
+
+# ============ Logs, caches, temp ============
+*.log
+dispatcher-runs*.jsonl
+*.tmp
+*.temp
+.phpunit.result.cache
+.php-cs-fixer.cache
+__pycache__/
+*.pyc
+/dist/
+
+# ============ Office lock files (anywhere) ============
+~$*
+
+# ============ Database dumps & backups ============
+# Block every .sql, then re-allow only the schema, seed and migrations.
+*.sql
+!/database/database.sql
+!/database/seed_households.sql
+!/project-support/migrations/*.sql
+*.sql.bak
+*.sql.gz
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.old
+*.orig
+backup_*
+*.zip
+*.rar
+*.7z
+
+# ============ Local working files ============
+source-code.txt
+/project-support/tests/**/server.json
+
+# ============ Runtime & user-uploaded storage ============
+document_templates/*.tmp
+document_templates/tpl_*.docx
+
+generated_documents/*
+!generated_documents/.htaccess
+!generated_documents/README.txt
+!generated_documents/previews/
+generated_documents/previews/*
+!generated_documents/previews/.htaccess
+!generated_documents/complaints/
+generated_documents/complaints/*
+!generated_documents/complaints/.htaccess
+
+profile_img/*
+!profile_img/README.txt
+!profile_img/b_official/
+profile_img/b_official/*
+!profile_img/b_official/.htaccess
+!profile_img/b_official/README.txt
+!profile_img/residents/
+profile_img/residents/*
+!profile_img/residents/.htaccess
+!profile_img/residents/README.txt
+
+complaint_attachments/*
+!complaint_attachments/.htaccess
