@@ -15,7 +15,7 @@
 -- Never import it into an existing installation to upgrade it; use
 -- project-support/migrations/ for that.
 --
--- seed_households.sql (run after this file, against the same database)
+-- test-resident-data(for demonstration).sql (run after this file, against the same database)
 -- depends on poverty_thresholds.id = 1 being the active Province-level
 -- threshold for Surigao del Norte. See the INSERT below.
 -- ============================================================================
@@ -130,7 +130,7 @@ PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- ----------------------------------------------------------------------------
 -- poverty_thresholds
--- IMPORTANT: The Province row must be id = 1 for seed_households.sql.
+-- IMPORTANT: The Province row must be id = 1 for test-resident-data(for demonstration).sql.
 -- Insert order below guarantees this on a fresh database.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `poverty_thresholds` (

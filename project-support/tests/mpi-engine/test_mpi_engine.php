@@ -4,7 +4,7 @@
  *
  * Loads the 35 seed households (ids 1-35) from the test database, runs
  * assess_household() on the linked profile and threshold, and diffs the
- * result against the values database/seed_households.sql hard-codes.
+ * result against the values database/test-resident-data(for demonstration).sql hard-codes.
  * Any mismatch is an engine bug.
  *
  * Run:  php project-support/tests/mpi-engine/test_mpi_engine.php
@@ -30,7 +30,7 @@ $result = $db->query("SELECT * FROM households WHERE id BETWEEN 1 AND 35 ORDER B
 $households = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
 if (!$households) {
-  fwrite(STDERR, "No seed households found (ids 1-35 missing). Run database/seed_households.sql first.\n");
+  fwrite(STDERR, "No seed households found (ids 1-35 missing). Run database/test-resident-data(for demonstration).sql first.\n");
   exit(1);
 }
 

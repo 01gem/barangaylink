@@ -69,15 +69,17 @@ See the LICENSE file in the project root for the full text.
 
        mysql -uroot -e "CREATE DATABASE barangay_system_test_environment CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
        mysql -uroot --default-character-set=utf8mb4 barangay_system_test_environment -e "source database/database.sql"
-       mysql -uroot --default-character-set=utf8mb4 barangay_system_test_environment -e "source database/seed_households.sql"
+       mysql -uroot --default-character-set=utf8mb4 barangay_system_test_environment -e "source database/test-resident-data(for demonstration).sql"
 
    Neither file selects or creates a database: they always write to the
    database named on the command line, so check that name before running.
    `database.sql` builds the complete schema and seeds the default admin
    account, the poverty thresholds, and the document prices; importing it a
-   second time into the same database changes nothing. `seed_households.sql`
-   then loads the 35-household fixture. It inserts fixed ids, so run it once
-   only. Never import `database.sql` into an existing installation to upgrade
+   second time into the same database changes nothing. The demo data file
+   `test-resident-data(for demonstration).sql` then loads the 35-household
+   fixture. It first DELETES households 1-35 and residents 1001-1100, then
+   inserts fixed ids: never run it against a database holding real residents.
+   Never import `database.sql` into an existing installation to upgrade
    it; apply the scripts in `project-support/migrations/` instead.
 
 3. Copy `.env.example` to `.env` at the project root and fill it in:
@@ -124,6 +126,13 @@ See the LICENSE file in the project root for the full text.
    repository; set your own hash in `database/database.sql` before importing
    (see the comment above the admin INSERT), and change it before exposing the app.
 
+## Running on Laragon
+
+The project runs on a stock Laragon install (Apache, MySQL 8.4, PHP 8.3).
+See [LARAGON_SETUP.md](LARAGON_SETUP.md) for the PHP extensions and time zone,
+the database commands, the private photo folder, the pickup dispatcher
+configuration and a post-setup checklist.
+
 ## Verifying the MPI engine
 
 The engine has a hand-computed fixture of 35 seeded households. Run:
@@ -131,7 +140,7 @@ The engine has a hand-computed fixture of 35 seeded households. Run:
     php project-support/tests/mpi-engine/test_mpi_engine.php
 
 The test loads households whose ids are 1-35 (the range
-database/seed_households.sql owns), reads each linked profile and
+database/test-resident-data(for demonstration).sql owns), reads each linked profile and
 threshold, and diffs the computed assessment against the seed's stored
 values. Expected output ends with `Results: 35/35 match`. Any mismatch is
 an engine bug, not a data bug.
